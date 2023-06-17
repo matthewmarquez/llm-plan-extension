@@ -239,10 +239,9 @@ class BackPrompter():
         
     def get_llm_feedback(self, domain_pddl, llm_plan, instance_id, messages=[]):
         '''
-        llm_plan should be extracted_llm_plan
-        messages are optional but can be provided to do verification as part of the current convo
-
-        will return result as well as message chain
+        Has an LLM correct the plan. Previous messages with the LLM (generation messages)
+        can optionally be passed as context to the LLM if there's interest
+        in seeing this as a conversation.
         '''
         query = self.data["domain_intro"]
         instance_dir = self.data['instance_dir']
@@ -258,7 +257,7 @@ class BackPrompter():
         for example, example_type in zip(example_instances, example_type):
             example_instance = instance_format.format(example)
             plan_executor = self.get_executor(example_instance, domain_pddl)
-            text,_ = plan_verification(plan_executor, self.data, True, give_reponse = True, instance_type=example_type)
+            text,_ = plan_verification(plan_executor, self.data, True, give_response = True, example_type=example_type)
             query += text
         plan_executor = self.get_executor(cur_instance, domain_pddl)
         text, _ = plan_verification(plan_executor, self.data, False, llm_plan=llm_plan)
@@ -296,14 +295,13 @@ class BackPrompter():
                 time.sleep(60)
                 continue
 
-            try: 
-                _, llm_plan = text_to_plan(llm_response, problem.actions, self.gpt3_plan_file, self.data)
-            except:
-                could_not_extract = True 
-                break
-
             if use_llm_feedback:
-                query, messages = self.get_llm_feedback(domain_pddl, llm_plan, cur_instance, messages)
+                try:
+                    llm_plan, readable_plan = text_to_plan(llm_response, problem.actions, self.gpt3_plan_file, self.data, ground_flag=True)
+                except:
+                    could_not_extract = True 
+                    break
+                query, _ = self.get_llm_feedback(domain_pddl, llm_plan.strip().split("\n"), cur_instance)
                 correct = False
                 for line in query.split('\n'):
                     if 'plan is valid' in line:
@@ -311,6 +309,7 @@ class BackPrompter():
                         break
             else:
                 try: 
+                    _, readable_plan = text_to_plan(llm_response, problem.actions, self.gpt3_plan_file, self.data)
                     feedback_dict = get_val_feedback(domain_pddl, cur_instance, self.gpt3_plan_file)
                 except:
                     could_not_extract = True 
@@ -320,7 +319,7 @@ class BackPrompter():
             steps += 1
 
         # print(f"Final LLM response after {steps} steps")
-        return messages, llm_plan, correct, steps, context_window_hit, could_not_extract
+        return messages, readable_plan, correct, steps, context_window_hit, could_not_extract
     
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -353,6 +352,6 @@ if __name__ == '__main__':
     # print(task, config, verbose, specified_instances, random_example)
     config_file = f'./configs/{config}.yaml'
     backprompter = BackPrompter(engine, verbose=verbose, ignore_existing=ignore_existing)
-    backprompter.task_1_plan_generation_backprompting(config_file, specified_instances, random_example, args.llm_validation)
+    backprompter.task_1_plan_generation_backprompting(config_file, args.llm_validation, specified_instances=specified_instances, random_example=random_example)
 
 

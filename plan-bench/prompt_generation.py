@@ -265,11 +265,11 @@ class PromptGenerator:
             for example, example_type in zip(example_instances, example_type):
                 example_instance = self.instance.format(example)
                 plan_executor = self.get_executor(example_instance, self.domain_pddl)
-                text,_ = plan_verification(plan_executor, self.data, True, give_repsonse=True, instance_type=example_type)
+                text,_ = plan_verification(plan_executor, self.data, True, give_response=True, example_type=example_type)
                 query += text
             instance_type = random.choice([-1, 0, 1])
             plan_executor = self.get_executor(cur_instance, self.domain_pddl)
-            text, answer = plan_verification(plan_executor, self.data, True, give_repsonse=False, instance_type=instance_type)
+            text, answer = plan_verification(plan_executor, self.data, True, give_response=False, example_type=instance_type)
             query += text
             if self.verbose:
                 print(query)
@@ -327,7 +327,7 @@ class PromptGenerator:
             for example, example_type in zip(example_instances, example_type):
                 example_instance = self.instance.format(example)
                 plan_executor = self.get_executor(example_instance, self.domain_pddl)
-                text,_ = plan_verification(plan_executor, self.data, True, give_response=True, instance_type=example_type)
+                text,_ = plan_verification(plan_executor, self.data, True, give_response=True, example_type=example_type)
                 query += text
             plan_executor = self.get_executor(cur_instance, self.domain_pddl)
             text, answer = plan_verification(plan_executor, self.data, True, give_response=False, llm_plan=llm_plan)

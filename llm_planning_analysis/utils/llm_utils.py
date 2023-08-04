@@ -80,7 +80,7 @@ def send_query(query, engine, max_tokens, model=None, stop="[STATEMENT]"):
         return text_response.strip()
     
 
-def send_query_with_feedback(query, engine, messages=[]):
+def send_query_with_feedback(query, engine, messages=[], system_message="You are the planner assistant who comes up with correct plans."):
     err_flag = False
     context_window_hit = False
     rate_limit_hit = False
@@ -89,11 +89,11 @@ def send_query_with_feedback(query, engine, messages=[]):
         print('chatmodels', eng)
         if len(messages) == 0:
             messages=[
-            {"role": "system", "content": "You are the planner assistant who comes up with correct plans."},
+            {"role": "system", "content": system_message},
             {"role": "user", "content": query}
             ]
         else:
-            #Just for validation message - query consists of the validation message
+            #Just for returning validation message to generating LLM - query consists of the validation message
             messages.append({"role": "user", "content": query})
         try:
             response = openai.ChatCompletion.create(model=eng, messages=messages, temperature=0)

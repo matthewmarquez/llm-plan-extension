@@ -121,12 +121,15 @@ class BackPrompter():
                                 "instances": instance_structured_outputs,
                                 }
         completed_instances =  []
+        prev_success_results = {}
         for inst in structured_output["instances"]:
             if not inst["could_not_extract"]:
                 completed_instances.append(inst["instance_id"])
+                prev_success_results[inst["instance_id"]] = inst["act_correct"]
             else:
                 if [msg["content"] for msg in inst["messages"] if msg["role"] == "assistant"][-1]:
                     completed_instances.append(inst["instance_id"])
+                    prev_success_results[inst["instance_id"]] = inst["act_correct"]
         if len(specified_instances):
             range_list = []
             for specified_instance in specified_instances:
@@ -185,6 +188,8 @@ class BackPrompter():
             # llm_response = ""
             if instance_structured_output["instance_id"] in completed_instances:
                 print(f"Instance {instance_structured_output['instance_id']} already completed")
+                if not prev_success_results[instance_structured_output["instance_id"]]:
+                    failed_instances += 1
                 continue
             # if self.is_already_correct(instance_structured_output["instance_id"]):
             #     print(f"Instance {instance_structured_output['instance_id']} already completed and correct")
@@ -217,6 +222,7 @@ class BackPrompter():
 
         
         structured_output["failed_instances"] = failed_instances
+        self.save_json(task_name, structured_output)
         final_output += f"[+]: The number of correct plans is {n_files - failed_instances}/{n_files}={(n_files - failed_instances) / (n_files) * 100}%"
         print(final_output)
 

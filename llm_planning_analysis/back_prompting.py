@@ -93,7 +93,7 @@ class BackPrompter():
 
     
 
-    def task_1_plan_generation_backprompting(self, config_file, specified_instances=[], random_example=False):
+    def task_1_plan_generation_backprompting(self, config_file, specified_instances=[], random_example=False, no_feedback=False):
         
         
         self.read_config(config_file)
@@ -110,6 +110,7 @@ class BackPrompter():
         final_output = ""
         instance_structured_outputs = []
         correct_plans = 0
+        total_steps = 0
 
         failed_instances = []
         structured_output = self.load_json(task_name)
@@ -200,7 +201,7 @@ class BackPrompter():
             #     continue
             # print("Got LLM response")
             messages, llm_plan, correct, steps, context_window_hit, could_not_extract = \
-                self.get_repeated_verification(self.engine, query, domain_pddl, problem, cur_instance)
+                self.get_repeated_verification(self.engine, query, domain_pddl, problem, cur_instance, no_feedback=no_feedback)
             instance_structured_output["messages"] = messages
             instance_structured_output["steps"] = steps
             instance_structured_output["correct"] = bool(correct)
@@ -210,6 +211,8 @@ class BackPrompter():
 
             structured_output["instances"].append(instance_structured_output)
             self.save_json(task_name, structured_output)
+
+            total_steps += steps
             
         try:
             os.remove(self.plan_file)
@@ -225,6 +228,8 @@ class BackPrompter():
         final_output += f"[+]: The number of correct plans is {correct_plans}/{n_files}={correct_plans / (n_files) * 100}%"
         print(f"[+]: The number of correct plans is {correct_plans}/{n_files}={correct_plans / (n_files) * 100}%")
 
+        print(f"[+]: The average number of steps is {total_steps / n_files}")
+
         return structured_output
 
     def is_already_correct(self, instance_id):
@@ -238,7 +243,7 @@ class BackPrompter():
             return False
         
 
-    def get_repeated_verification(self, engine, original_query, domain_pddl, problem, cur_instance, threshold_feedback_amount=15):
+    def get_repeated_verification(self, engine, original_query, domain_pddl, problem, cur_instance, no_feedback=False, threshold_feedback_amount=15):
         
         correct = 0
         steps = 0
@@ -273,7 +278,7 @@ class BackPrompter():
                 could_not_extract = True 
                 break
             correct = int(val_feedback_dict["validation_info"]["is_valid_plan"])
-            query = get_validation_message(val_feedback_dict, self.data)
+            query = get_validation_message(val_feedback_dict, self.data, no_feedback)
             steps += 1
 
         # print(f"Final LLM response after {steps} steps")
@@ -297,6 +302,7 @@ if __name__ == '__main__':
     parser.add_argument('--random_example', type=str, default="False", help='Random example')
     parser.add_argument('--ignore_existing', action='store_true', help='Ignore existing output')
     parser.add_argument('--seed', type=int, default=42, help='Random seed')
+    parser.add_argument('--no_feedback', action='store_true', help='Do not provide feedback in backprompting')
     args = parser.parse_args()
     config = args.config
     engine = args.engine
@@ -305,10 +311,11 @@ if __name__ == '__main__':
     random_example = eval(args.random_example)
     ignore_existing = args.ignore_existing
     seed = args.seed
+    no_feedback = args.no_feedback
     random.seed(seed)
     # print(task, config, verbose, specified_instances, random_example)
     config_file = f'./configs/{config}.yaml'
     backprompter = BackPrompter(engine, verbose=verbose, ignore_existing=ignore_existing)
-    backprompter.task_1_plan_generation_backprompting(config_file, specified_instances, random_example)
+    backprompter.task_1_plan_generation_backprompting(config_file, specified_instances, random_example, no_feedback)
 
 

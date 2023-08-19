@@ -392,7 +392,6 @@ def get_val_feedback(domain_file, instance_file, plan_file):
             repair = False
         if repair and line:
             feedback.append(line)
-    print(feedback)
     unmet_precond, unmet_goal = reformat_feedback(feedback)
     feedback_dict = {
         'validation_info': {'is_valid_plan': plan_valid},
@@ -402,10 +401,13 @@ def get_val_feedback(domain_file, instance_file, plan_file):
     return feedback_dict
         
 
-def get_validation_message(val_message, data):
+def get_validation_message(val_message, data, no_feedback=False):
     unmet_precond, unmet_goal = val_message['unmet_info']['unmet_precond'], val_message['unmet_info']['unmet_goal']
     
     error_message = "The above plan is invalid."
+
+    if no_feedback:
+        return error_message
 
     if unmet_goal:
         is_joint = "and" in unmet_goal[1]

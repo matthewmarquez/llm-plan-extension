@@ -6,6 +6,7 @@ from Executor import Executor
 from utils import *
 from pathlib import Path
 from tarski.io import PDDLReader
+from full_validator import *
 import argparse
 import time
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoModel
@@ -93,7 +94,7 @@ class BackPrompter():
 
     
 
-    def task_1_plan_generation_backprompting(self, config_file, specified_instances=[], random_example=False, no_feedback=False):
+    def task_1_plan_generation_backprompting(self, config_file, specified_instances=[], random_example=False, feedback_type=0):
         
         
         self.read_config(config_file)
@@ -201,7 +202,7 @@ class BackPrompter():
             #     continue
             # print("Got LLM response")
             messages, llm_plan, correct, steps, context_window_hit, could_not_extract = \
-                self.get_repeated_verification(self.engine, query, domain_pddl, problem, cur_instance, no_feedback=no_feedback)
+                self.get_repeated_verification(self.engine, query, domain_pddl, problem, cur_instance, feedback_type=feedback_type)
             instance_structured_output["messages"] = messages
             instance_structured_output["steps"] = steps
             instance_structured_output["correct"] = bool(correct)
@@ -243,7 +244,7 @@ class BackPrompter():
             return False
         
 
-    def get_repeated_verification(self, engine, original_query, domain_pddl, problem, cur_instance, no_feedback=False, threshold_feedback_amount=15):
+    def get_repeated_verification(self, engine, original_query, domain_pddl, problem, cur_instance, feedback_type=0, threshold_feedback_amount=15):
         
         correct = 0
         steps = 0
@@ -271,14 +272,18 @@ class BackPrompter():
                 print("Rate limit hit. Waiting for 60 seconds.")
                 time.sleep(60)
                 continue
-            try: 
-                _, llm_plan = text_to_plan(llm_response, problem.actions, self.gpt3_plan_file, self.data)
-                val_feedback_dict = get_val_feedback(domain_pddl, cur_instance, self.gpt3_plan_file)
-            except:
-                could_not_extract = True 
-                break
+            val_validator = feedback_type != 2
+            # try: 
+            _, llm_plan = text_to_plan(llm_response, problem.actions, self.gpt3_plan_file, self.data)
+            val_feedback_dict = get_val_feedback(domain_pddl, cur_instance, self.gpt3_plan_file) if val_validator else get_all_errors(domain_pddl, cur_instance, self.gpt3_plan_file)
+            # except:
+            #     could_not_extract = True 
+            #     break
             correct = int(val_feedback_dict["validation_info"]["is_valid_plan"])
-            query = get_validation_message(val_feedback_dict, self.data, no_feedback)
+            query = get_validation_message(val_feedback_dict, 
+                                           self.data, 
+                                           val_validator,
+                                           feedback_type=feedback_type)
             steps += 1
 
         # print(f"Final LLM response after {steps} steps")
@@ -302,7 +307,11 @@ if __name__ == '__main__':
     parser.add_argument('--random_example', type=str, default="False", help='Random example')
     parser.add_argument('--ignore_existing', action='store_true', help='Ignore existing output')
     parser.add_argument('--seed', type=int, default=42, help='Random seed')
-    parser.add_argument('--no_feedback', action='store_true', help='Do not provide feedback in backprompting')
+    parser.add_argument('--feedback_type', type=int, default=0, help='Changes the amount of feedback provided to LLM in backprompt.\n \
+                        \n 0 = one error \
+                        \n 1 = no errors \
+                        \n 2 = all errors \
+                        ')
     args = parser.parse_args()
     config = args.config
     engine = args.engine
@@ -311,11 +320,11 @@ if __name__ == '__main__':
     random_example = eval(args.random_example)
     ignore_existing = args.ignore_existing
     seed = args.seed
-    no_feedback = args.no_feedback
+    feedback_type = args.feedback_type
     random.seed(seed)
     # print(task, config, verbose, specified_instances, random_example)
     config_file = f'./configs/{config}.yaml'
     backprompter = BackPrompter(engine, verbose=verbose, ignore_existing=ignore_existing)
-    backprompter.task_1_plan_generation_backprompting(config_file, specified_instances, random_example, no_feedback)
+    backprompter.task_1_plan_generation_backprompting(config_file, specified_instances, random_example, feedback_type)
 
 

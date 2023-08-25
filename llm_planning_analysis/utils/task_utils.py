@@ -401,13 +401,50 @@ def get_val_feedback(domain_file, instance_file, plan_file):
     return feedback_dict
         
 
-def get_validation_message(val_message, data, no_feedback=False):
+def get_validation_message(val_message, data, val_validator=True, feedback_type=0):
+    '''
+    Returns a validation message given data from a validator. Works with VAL
+    validator as well as custom validator. Since the validators format information
+    differently, the type of validator should be expressed with val_validator
+    to allow better parsing (set to true if VAL is used or false if the custom
+    validator is used).
+
+    Different amounts of feedback can be provided in the message. A message can
+    contain a single issue, no issues, or all issues. VAL only provides enough
+    data to generate single issue or no issue prompts, so it cannot be used
+    with full feedback (val_validator cannot be True if feedback_type is 2).
+
+    Feedback types:
+    0 - first issue found by VAL
+    1 - no feedback
+    2 - full feedback
+    '''
+    if val_validator and feedback_type==2:
+        print("ERROR: Full error message cannot be generated from VAL feedback. Use custom validator instead.")
+        return
+
     unmet_precond, unmet_goal = val_message['unmet_info']['unmet_precond'], val_message['unmet_info']['unmet_goal']
     
     error_message = "The above plan is invalid."
 
-    if no_feedback:
+    if feedback_type==1:
         return error_message
+
+    if val_validator and feedback_type==0:
+        # Only needed to generate message from single error. VAL cannot
+        # be used for multiple errors.
+        return error_message + get_val_error_message(unmet_precond, unmet_goal, data)
+    elif feedback_type==0 or feedback_type==2:
+        return error_message + get_custom_validator_error_message(unmet_precond, unmet_goal, data, feedback_type==2)
+    
+    return
+
+def get_val_error_message(unmet_precond, unmet_goal, data):
+    '''
+    Generates a single error validation message using data from VAL.
+    '''
+
+    error_message = ""
 
     if unmet_goal:
         is_joint = "and" in unmet_goal[1]
@@ -433,6 +470,46 @@ def get_validation_message(val_message, data, no_feedback=False):
         
     else:
         return None
+
     error_message += get_state_translation(map(lambda pddl: pddl.strip("()").replace(" ", "_"), predicates), data)
     
     return error_message
+
+def get_custom_validator_error_message(unmet_precon, unmet_goal, data, all_errors=True):
+
+    error_message = ""
+
+    if len(unmet_goal) > 0:
+        if len(unmet_goal) > 1:
+            error_message += "There are unmet goal conditions. These are:\n"
+        else:
+            error_message += "There is an unmet goal condition. This is:\n"
+
+        error_message += get_state_translation(unmet_goal, data)
+
+        if not all_errors:
+            return error_message
+        
+    has_found_unmet_action = False
+
+    for timestep, action_pair in enumerate(unmet_precon):
+        action, predicates = action_pair
+        if len(predicates) > 0 and not has_found_unmet_action:
+            error_message += "There are unsatisfied preconditions.\n"
+            has_found_unmet_action = True
+
+        error_message += f" The following action at step {timestep+1} has unmet preconditions:\n" \
+            if len(predicates) > 1 else \
+            f"The following action at step {timestep+1} has an unmet precondition:\n"
+        error_message += get_action_text(action.strip("()").replace(" ", "_"), data) + "\n"
+        error_message += "The unmet preconditions are:\n" \
+            if len(predicates) > 1 else \
+            "The unmet precondition is:\n"
+        
+        error_message += get_state_translation(map(lambda pddl: pddl.strip("()").replace(" ", "_"), predicates), data)
+
+        if not all_errors and has_found_unmet_action:
+            break
+        
+    return error_message
+        

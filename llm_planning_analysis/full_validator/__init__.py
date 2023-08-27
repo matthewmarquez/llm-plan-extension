@@ -57,7 +57,6 @@ def get_all_errors(domain_file, problem_file, plan_file):
             }
     }
     """
-    print(feedback_dict)
     return feedback_dict
         
 

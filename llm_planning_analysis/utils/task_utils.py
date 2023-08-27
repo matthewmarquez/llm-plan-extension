@@ -425,7 +425,7 @@ def get_validation_message(val_message, data, val_validator=True, feedback_type=
 
     unmet_precond, unmet_goal = val_message['unmet_info']['unmet_precond'], val_message['unmet_info']['unmet_goal']
     
-    error_message = "The above plan is invalid."
+    error_message = "The above plan is invalid.\n"
 
     if feedback_type==1:
         return error_message
@@ -485,7 +485,7 @@ def get_custom_validator_error_message(unmet_precon, unmet_goal, data, all_error
         else:
             error_message += "There is an unmet goal condition. This is:\n"
 
-        error_message += get_state_translation(unmet_goal, data)
+        error_message += get_state_translation(unmet_goal, data) + "\n"
 
         if not all_errors:
             return error_message

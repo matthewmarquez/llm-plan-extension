@@ -273,12 +273,12 @@ class BackPrompter():
                 time.sleep(60)
                 continue
             val_validator = feedback_type != 2
-            # try: 
-            _, llm_plan = text_to_plan(llm_response, problem.actions, self.gpt3_plan_file, self.data)
-            val_feedback_dict = get_val_feedback(domain_pddl, cur_instance, self.gpt3_plan_file) if val_validator else get_all_errors(domain_pddl, cur_instance, self.gpt3_plan_file)
-            # except:
-            #     could_not_extract = True 
-            #     break
+            try: 
+                _, llm_plan = text_to_plan(llm_response, problem.actions, self.gpt3_plan_file, self.data)
+                val_feedback_dict = get_val_feedback(domain_pddl, cur_instance, self.gpt3_plan_file) if val_validator else get_all_errors(domain_pddl, cur_instance, self.gpt3_plan_file)
+            except:
+                could_not_extract = True 
+                break
             correct = int(val_feedback_dict["validation_info"]["is_valid_plan"])
             query = get_validation_message(val_feedback_dict, 
                                            self.data, 

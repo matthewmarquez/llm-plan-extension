@@ -210,6 +210,9 @@ class BackPrompter():
             instance_structured_output["context_window_hit"] = bool(context_window_hit)
             instance_structured_output["could_not_extract"] = bool(could_not_extract)
 
+            if correct:
+                correct_plans += 1
+
             structured_output["instances"].append(instance_structured_output)
             self.save_json(task_name, structured_output)
 
@@ -280,10 +283,13 @@ class BackPrompter():
                 could_not_extract = True 
                 break
             correct = int(val_feedback_dict["validation_info"]["is_valid_plan"])
-            query = get_validation_message(val_feedback_dict, 
-                                           self.data, 
-                                           val_validator,
-                                           feedback_type=feedback_type)
+            if correct==0:
+                query = get_validation_message(val_feedback_dict, 
+                                            self.data, 
+                                            val_validator,
+                                            feedback_type=feedback_type)
+            else:
+                query = ""
             steps += 1
 
         # print(f"Final LLM response after {steps} steps")

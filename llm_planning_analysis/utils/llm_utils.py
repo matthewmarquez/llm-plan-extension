@@ -80,13 +80,25 @@ def send_query(query, engine, max_tokens, model=None, stop="[STATEMENT]"):
         return text_response.strip()
     
 
-def send_query_with_feedback(query, engine, messages=[]):
+def send_query_with_feedback(query, engine, messages=[], snapshot=None):
+    '''
+    Sends a query to the LLM. For reproducible results, a snapshot id can be provided. The snapshot id is
+    the last term in the snapshot model name from OpenAI; this code will merely append that term back on
+    to the model name so that snapshot is chosen. For example, if the snapshotted model you want is labeled
+    by OpenAI as gpt-4-0613, provide 0613 as the snapshot. Providing no snapshot will use the model that 
+    OpenAI has labeled with the model name only (this is typically the most recent model; if GPT-4 is the 
+    model, then we will specifically use the model OpenAI has labeled as 'gpt-4')
+    '''
     err_flag = False
     context_window_hit = False
     rate_limit_hit = False
     if '_chat' in engine:
         eng = engine.split('_')[0]
         print('chatmodels', eng)
+
+        if snapshot is not None:
+            eng += f"_{snapshot}"
+
         if len(messages) == 0:
             messages=[
             {"role": "system", "content": "You are the planner assistant who comes up with correct plans."},

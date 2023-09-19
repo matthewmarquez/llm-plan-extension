@@ -103,6 +103,8 @@ Optional arguments:
 
 
 ## Adding a new LLM
+> **NOTE:** Our systems expect action names to either be all captizalized or all lower case. Mixed case action names may result in unexpected behavior.
+
 - If the LLM is loaded locally
   1. Add the LLM querying code in the send_query function in utils/llm_utils.py based on the engine name.
   2. Load the model by adding a function in ResponseGenerator class in response_generation.py and call it in the \_\_init\_\_ function based on the engine name.

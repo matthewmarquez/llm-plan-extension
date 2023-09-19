@@ -81,24 +81,24 @@ class BackPrompter():
 
 
     def save_json(self, output_file, structured_output):
-        os.makedirs(f"results/{self.data['domain_name']}/{self.engine}/json/", exist_ok=True)
-        with open(f"results/{self.data['domain_name']}/{self.engine}/json/" + output_file + ".json", "w") as f:
+        os.makedirs(f"results/{self.data['domain_name']}/{self.engine}/", exist_ok=True)
+        with open(f"results/{self.data['domain_name']}/{self.engine}/" + output_file + ".json", "w") as f:
             json.dump(structured_output, f, indent=4)
     
     def load_json(self, output_file):
-        if os.path.exists(f"results/{self.data['domain_name']}/{self.engine}/json/" + output_file + ".json") and not self.ignore_existing:
-            with open(f"results/{self.data['domain_name']}/{self.engine}/json/" + output_file + ".json", "r") as f:
+        if os.path.exists(f"results/{self.data['domain_name']}/{self.engine}/" + output_file + ".json") and not self.ignore_existing:
+            with open(f"results/{self.data['domain_name']}/{self.engine}/" + output_file + ".json", "r") as f:
                 return json.load(f)
         else:
             return None
 
     
 
-    def task_1_plan_generation_backprompting(self, config_file, specified_instances=[], random_example=False, feedback_type=0):
+    def task_1_plan_generation_backprompting(self, config_file, specified_instances=[], random_example=False, feedback_type=0, snapshot=None):
         
         
         self.read_config(config_file)
-        task_name = "task_1_plan_generation_backprompting"
+        task_name = f"task_1_plan_generation_backprompting_feedback_{feedback_type}"
         instance_dir = self.data['instance_dir']
         domain_pddl = f'./instances/{self.data["domain_file"]}'
         instance_folder = f'./instances/{instance_dir}/'
@@ -118,7 +118,9 @@ class BackPrompter():
         if structured_output is None:
             structured_output = {
                                 "task": task_name,
+                                "additional_task_info": f"backprompting_with_feedback_type_{feedback_type}",
                                 "engine": self.engine,
+                                "snapshot": snapshot,
                                 "prompt_type": "oneshot",
                                 "domain": self.data["domain_name"],
                                 "instances": instance_structured_outputs,
@@ -276,10 +278,15 @@ class BackPrompter():
                 time.sleep(60)
                 continue
             val_validator = feedback_type != 2
+            
+            # Clear previously extracted plan
+            llm_plan = None
+
             try: 
                 _, llm_plan = text_to_plan(llm_response, problem.actions, self.gpt3_plan_file, self.data)
                 val_feedback_dict = get_val_feedback(domain_pddl, cur_instance, self.gpt3_plan_file) if val_validator else get_all_errors(domain_pddl, cur_instance, self.gpt3_plan_file)
-            except:
+            except Exception as e:
+                print(e)
                 could_not_extract = True 
                 break
             correct = int(val_feedback_dict["validation_info"]["is_valid_plan"])
@@ -318,6 +325,7 @@ if __name__ == '__main__':
                         \n 1 = no errors \
                         \n 2 = all errors \
                         ')
+    parser.add_argument('--snapshot', type=str, default=None, help='If an OpenAI chat model is used, selects the snapshot of the model')
     args = parser.parse_args()
     config = args.config
     engine = args.engine
@@ -327,10 +335,11 @@ if __name__ == '__main__':
     ignore_existing = args.ignore_existing
     seed = args.seed
     feedback_type = args.feedback_type
+    snapshot = args.snapshot
     random.seed(seed)
     # print(task, config, verbose, specified_instances, random_example)
     config_file = f'./configs/{config}.yaml'
     backprompter = BackPrompter(engine, verbose=verbose, ignore_existing=ignore_existing)
-    backprompter.task_1_plan_generation_backprompting(config_file, specified_instances, random_example, feedback_type)
+    backprompter.task_1_plan_generation_backprompting(config_file, specified_instances=specified_instances, random_example=random_example, feedback_type=feedback_type, snapshot=snapshot)
 
 

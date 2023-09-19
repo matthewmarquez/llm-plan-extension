@@ -13,6 +13,8 @@ def get_all_errors(domain_file, problem_file, plan_file):
     curr_state = executor.init_state
     for action in plan:
         action = action.replace('(', '').replace(')', '').replace(" ", "_")
+        if executor.is_action_list_upper():
+            action = action.upper()
         act_open_conditions = set()
         preconds, add_effects, del_effects = executor.ground_strips_action(action)
         # Find the preconds that are not satisfied

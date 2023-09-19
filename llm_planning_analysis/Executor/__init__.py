@@ -34,6 +34,9 @@ class Executor:
         self.final_state_dict = {}
         self._set_seed(seed)
 
+    def is_action_list_upper(self):
+        return list(self.model[DOMAIN].keys())[0].isupper()
+
     def _set_seed(self, seed):
         random.seed(seed)
 

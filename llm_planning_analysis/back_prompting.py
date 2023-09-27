@@ -285,16 +285,21 @@ class BackPrompter():
             try: 
                 _, llm_plan = text_to_plan(llm_response, problem.actions, self.gpt3_plan_file, self.data)
                 val_feedback_dict = get_val_feedback(domain_pddl, cur_instance, self.gpt3_plan_file) if val_validator else get_all_errors(domain_pddl, cur_instance, self.gpt3_plan_file)
-            except Exception as e:
-                print(e)
+            except:
                 could_not_extract = True 
                 break
             correct = int(val_feedback_dict["validation_info"]["is_valid_plan"])
             if correct==0:
-                query = get_validation_message(val_feedback_dict, 
-                                            self.data, 
-                                            val_validator,
-                                            feedback_type=feedback_type)
+                try:
+                    query = get_validation_message(val_feedback_dict, 
+                                                self.data, 
+                                                val_validator,
+                                                feedback_type=feedback_type)
+                except:
+                    print("ERROR: Validation dict missing error")
+                    print(val_feedback_dict)
+                    could_not_extract = True
+                    break
             else:
                 query = ""
             steps += 1

@@ -4,7 +4,7 @@ domain_file: blocksworld/generated_domain.pddl
 domain_name: blocksworld
 n_instances: 501
 start: 1
-end: 500
+end: 65
 instances_template: instance-{}.pddl
 domain_intro: |
    I am playing with a set of blocks where I need to arrange the blocks into stacks. Here are the actions I can do

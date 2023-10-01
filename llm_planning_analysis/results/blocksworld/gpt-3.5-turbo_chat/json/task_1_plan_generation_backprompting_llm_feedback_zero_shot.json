@@ -1,0 +1,128 @@
+{
+    "task": "task_1_plan_generation_backprompting_llm_feedback_zero_shot",
+    "engine": "gpt-3.5-turbo_chat",
+    "prompt_type": "oneshot",
+    "domain": "blocksworld",
+    "instances": [
+        {
+            "instance_id": 2,
+            "example_instance_ids": [
+                1
+            ],
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You are the planner assistant who comes up with correct plans."
+                },
+                {
+                    "role": "user",
+                    "content": "I am playing with a set of blocks where I need to arrange the blocks into stacks. Here are the actions I can do\n\nPick up a block\nUnstack a block from on top of another block\nPut down a block\nStack a block on top of another block\n\nI have the following restrictions on my actions:\nI can only pick up or unstack one block at a time.\nI can only pick up or unstack a block if my hand is empty.\nI can only pick up a block if the block is on the table and the block is clear. A block is clear if the block has no other blocks on top of it and if the block is not picked up.\nI can only unstack a block from on top of another block if the block I am unstacking was really on top of the other block.\nI can only unstack a block from on top of another block if the block I am unstacking is clear.\nOnce I pick up or unstack a block, I am holding the block.\nI can only put down a block that I am holding.\nI can only stack a block on top of another block if I am holding the block being stacked.\nI can only stack a block on top of another block if the block onto which I am stacking the block is clear.\nOnce I put down or stack a block, my hand becomes empty.\nOnce you stack a block on top of a second block, the second block is no longer clear.\n\n[STATEMENT]\nAs initial conditions I have that, the red block is clear, the blue block is clear, the yellow block is clear, the hand is empty, the blue block is on top of the orange block, the red block is on the table, the orange block is on the table and the yellow block is on the table.\nMy goal is to have that the orange block is on top of the blue block.\n\nMy plan is as follows:\n\n[PLAN]\nunstack the blue block from on top of the orange block\nput down the blue block\npick up the orange block\nstack the orange block on top of the blue block\n[PLAN END]\n\n[STATEMENT]\nAs initial conditions I have that, the red block is clear, the yellow block is clear, the hand is empty, the red block is on top of the blue block, the yellow block is on top of the orange block, the blue block is on the table and the orange block is on the table.\nMy goal is to have that the orange block is on top of the red block.\n\nMy plan is as follows:\n\n[PLAN]"
+                },
+                {
+                    "role": "assistant",
+                    "content": "unstack the yellow block from on top of the orange block\nput down the yellow block\npick up the orange block\nstack the orange block on top of the red block\n[PLAN END]"
+                }
+            ],
+            "steps": 1,
+            "verifier_states_correct": false,
+            "act_correct": true,
+            "extracted_llm_plan": "(unstack yellow orange)\n(put-down yellow)\n(pick-up orange)\n(stack orange red)\n",
+            "context_window_hit": false,
+            "could_not_extract": false,
+            "feedback_messages": [
+                {
+                    "role": "system",
+                    "content": "You are the planner assistant that validates whether a provided plan is correct and provides feedback if not."
+                },
+                {
+                    "role": "user",
+                    "content": "I am playing with a set of blocks where I need to arrange the blocks into stacks. Here are the actions I can do\n\nPick up a block\nUnstack a block from on top of another block\nPut down a block\nStack a block on top of another block\n\nI have the following restrictions on my actions:\nI can only pick up or unstack one block at a time.\nI can only pick up or unstack a block if my hand is empty.\nI can only pick up a block if the block is on the table and the block is clear. A block is clear if the block has no other blocks on top of it and if the block is not picked up.\nI can only unstack a block from on top of another block if the block I am unstacking was really on top of the other block.\nI can only unstack a block from on top of another block if the block I am unstacking is clear.\nOnce I pick up or unstack a block, I am holding the block.\nI can only put down a block that I am holding.\nI can only stack a block on top of another block if I am holding the block being stacked.\nI can only stack a block on top of another block if the block onto which I am stacking the block is clear.\nOnce I put down or stack a block, my hand becomes empty.\nOnce you stack a block on top of a second block, the second block is no longer clear.\n\n[STATEMENT]\nAs initial conditions I have that, the red block is clear, the yellow block is clear, the hand is empty, the red block is on top of the blue block, the yellow block is on top of the orange block, the blue block is on the table and the orange block is on the table.\nMy goal is to have that the orange block is on top of the red block. \nMy plan is as follows:\n\n[PLAN]\nunstack the yellow block from on top of the orange block\nput down the yellow block\npick up the orange block\nstack the orange block on top of the red block\n[PLAN END]\n\nVerify whether the above plan is valid. If it is valid, please say \"Plan is valid.\" and nothing else. If it is invalid, please say \"Plan is invalid.\" and then provide feedback on why the plan fails."
+                },
+                {
+                    "role": "assistant",
+                    "content": "Plan is valid."
+                }
+            ]
+        },
+        {
+            "instance_id": 3,
+            "example_instance_ids": [
+                2
+            ],
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You are the planner assistant who comes up with correct plans."
+                },
+                {
+                    "role": "user",
+                    "content": "I am playing with a set of blocks where I need to arrange the blocks into stacks. Here are the actions I can do\n\nPick up a block\nUnstack a block from on top of another block\nPut down a block\nStack a block on top of another block\n\nI have the following restrictions on my actions:\nI can only pick up or unstack one block at a time.\nI can only pick up or unstack a block if my hand is empty.\nI can only pick up a block if the block is on the table and the block is clear. A block is clear if the block has no other blocks on top of it and if the block is not picked up.\nI can only unstack a block from on top of another block if the block I am unstacking was really on top of the other block.\nI can only unstack a block from on top of another block if the block I am unstacking is clear.\nOnce I pick up or unstack a block, I am holding the block.\nI can only put down a block that I am holding.\nI can only stack a block on top of another block if I am holding the block being stacked.\nI can only stack a block on top of another block if the block onto which I am stacking the block is clear.\nOnce I put down or stack a block, my hand becomes empty.\nOnce you stack a block on top of a second block, the second block is no longer clear.\n\n[STATEMENT]\nAs initial conditions I have that, the red block is clear, the yellow block is clear, the hand is empty, the red block is on top of the blue block, the yellow block is on top of the orange block, the blue block is on the table and the orange block is on the table.\nMy goal is to have that the orange block is on top of the red block.\n\nMy plan is as follows:\n\n[PLAN]\nunstack the yellow block from on top of the orange block\nput down the yellow block\npick up the orange block\nstack the orange block on top of the red block\n[PLAN END]\n\n[STATEMENT]\nAs initial conditions I have that, the blue block is clear, the hand is empty, the blue block is on top of the orange block, the orange block is on top of the yellow block, the yellow block is on top of the red block and the red block is on the table.\nMy goal is to have that the red block is on top of the orange block and the yellow block is on top of the red block.\n\nMy plan is as follows:\n\n[PLAN]"
+                },
+                {
+                    "role": "assistant",
+                    "content": "unstack the yellow block from on top of the red block\nput down the yellow block\npick up the red block\nstack the red block on top of the orange block\nstack the yellow block on top of the red block\n[PLAN END]"
+                }
+            ],
+            "steps": 1,
+            "verifier_states_correct": false,
+            "act_correct": false,
+            "extracted_llm_plan": "(unstack yellow red)\n(put-down yellow)\n(pick-up red)\n(stack red orange)\n(stack yellow red)\n",
+            "context_window_hit": false,
+            "could_not_extract": false,
+            "feedback_messages": [
+                {
+                    "role": "system",
+                    "content": "You are the planner assistant that validates whether a provided plan is correct and provides feedback if not."
+                },
+                {
+                    "role": "user",
+                    "content": "I am playing with a set of blocks where I need to arrange the blocks into stacks. Here are the actions I can do\n\nPick up a block\nUnstack a block from on top of another block\nPut down a block\nStack a block on top of another block\n\nI have the following restrictions on my actions:\nI can only pick up or unstack one block at a time.\nI can only pick up or unstack a block if my hand is empty.\nI can only pick up a block if the block is on the table and the block is clear. A block is clear if the block has no other blocks on top of it and if the block is not picked up.\nI can only unstack a block from on top of another block if the block I am unstacking was really on top of the other block.\nI can only unstack a block from on top of another block if the block I am unstacking is clear.\nOnce I pick up or unstack a block, I am holding the block.\nI can only put down a block that I am holding.\nI can only stack a block on top of another block if I am holding the block being stacked.\nI can only stack a block on top of another block if the block onto which I am stacking the block is clear.\nOnce I put down or stack a block, my hand becomes empty.\nOnce you stack a block on top of a second block, the second block is no longer clear.\n\n[STATEMENT]\nAs initial conditions I have that, the blue block is clear, the hand is empty, the blue block is on top of the orange block, the orange block is on top of the yellow block, the yellow block is on top of the red block and the red block is on the table.\nMy goal is to have that the red block is on top of the orange block and the yellow block is on top of the red block. \nMy plan is as follows:\n\n[PLAN]\nunstack the yellow block from on top of the red block\nput down the yellow block\npick up the red block\nstack the red block on top of the orange block\nstack the yellow block on top of the red block\n[PLAN END]\n\nVerify whether the above plan is valid. If it is valid, please say \"Plan is valid.\" and nothing else. If it is invalid, please say \"Plan is invalid.\" and then provide feedback on why the plan fails."
+                },
+                {
+                    "role": "assistant",
+                    "content": "Plan is valid."
+                }
+            ]
+        },
+        {
+            "instance_id": 4,
+            "example_instance_ids": [
+                3
+            ],
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You are the planner assistant who comes up with correct plans."
+                },
+                {
+                    "role": "user",
+                    "content": "I am playing with a set of blocks where I need to arrange the blocks into stacks. Here are the actions I can do\n\nPick up a block\nUnstack a block from on top of another block\nPut down a block\nStack a block on top of another block\n\nI have the following restrictions on my actions:\nI can only pick up or unstack one block at a time.\nI can only pick up or unstack a block if my hand is empty.\nI can only pick up a block if the block is on the table and the block is clear. A block is clear if the block has no other blocks on top of it and if the block is not picked up.\nI can only unstack a block from on top of another block if the block I am unstacking was really on top of the other block.\nI can only unstack a block from on top of another block if the block I am unstacking is clear.\nOnce I pick up or unstack a block, I am holding the block.\nI can only put down a block that I am holding.\nI can only stack a block on top of another block if I am holding the block being stacked.\nI can only stack a block on top of another block if the block onto which I am stacking the block is clear.\nOnce I put down or stack a block, my hand becomes empty.\nOnce you stack a block on top of a second block, the second block is no longer clear.\n\n[STATEMENT]\nAs initial conditions I have that, the blue block is clear, the hand is empty, the blue block is on top of the orange block, the orange block is on top of the yellow block, the yellow block is on top of the red block and the red block is on the table.\nMy goal is to have that the red block is on top of the orange block and the yellow block is on top of the red block.\n\nMy plan is as follows:\n\n[PLAN]\nunstack the blue block from on top of the orange block\nput down the blue block\nunstack the orange block from on top of the yellow block\nput down the orange block\nunstack the yellow block from on top of the red block\nstack the yellow block on top of the blue block\npick up the red block\nstack the red block on top of the orange block\nunstack the yellow block from on top of the blue block\nstack the yellow block on top of the red block\n[PLAN END]\n\n[STATEMENT]\nAs initial conditions I have that, the yellow block is clear, the hand is empty, the red block is on top of the orange block, the orange block is on top of the blue block, the yellow block is on top of the red block and the blue block is on the table.\nMy goal is to have that the red block is on top of the yellow block and the yellow block is on top of the blue block.\n\nMy plan is as follows:\n\n[PLAN]"
+                },
+                {
+                    "role": "assistant",
+                    "content": "unstack the red block from on top of the orange block\nput down the red block\nunstack the yellow block from on top of the red block\nstack the yellow block on top of the blue block\npick up the red block\nstack the red block on top of the yellow block\nunstack the yellow block from on top of the blue block\nstack the yellow block on top of the red block\n[PLAN END]"
+                }
+            ],
+            "steps": 1,
+            "verifier_states_correct": false,
+            "act_correct": false,
+            "extracted_llm_plan": "(unstack red orange)\n(put-down red)\n(unstack yellow red)\n(stack yellow blue)\n(pick-up red)\n(stack red yellow)\n(unstack yellow blue)\n(stack yellow red)\n",
+            "context_window_hit": false,
+            "could_not_extract": false,
+            "feedback_messages": [
+                {
+                    "role": "system",
+                    "content": "You are the planner assistant that validates whether a provided plan is correct and provides feedback if not."
+                },
+                {
+                    "role": "user",
+                    "content": "I am playing with a set of blocks where I need to arrange the blocks into stacks. Here are the actions I can do\n\nPick up a block\nUnstack a block from on top of another block\nPut down a block\nStack a block on top of another block\n\nI have the following restrictions on my actions:\nI can only pick up or unstack one block at a time.\nI can only pick up or unstack a block if my hand is empty.\nI can only pick up a block if the block is on the table and the block is clear. A block is clear if the block has no other blocks on top of it and if the block is not picked up.\nI can only unstack a block from on top of another block if the block I am unstacking was really on top of the other block.\nI can only unstack a block from on top of another block if the block I am unstacking is clear.\nOnce I pick up or unstack a block, I am holding the block.\nI can only put down a block that I am holding.\nI can only stack a block on top of another block if I am holding the block being stacked.\nI can only stack a block on top of another block if the block onto which I am stacking the block is clear.\nOnce I put down or stack a block, my hand becomes empty.\nOnce you stack a block on top of a second block, the second block is no longer clear.\n\n[STATEMENT]\nAs initial conditions I have that, the yellow block is clear, the hand is empty, the red block is on top of the orange block, the orange block is on top of the blue block, the yellow block is on top of the red block and the blue block is on the table.\nMy goal is to have that the red block is on top of the yellow block and the yellow block is on top of the blue block. \nMy plan is as follows:\n\n[PLAN]\nunstack the red block from on top of the orange block\nput down the red block\nunstack the yellow block from on top of the red block\nstack the yellow block on top of the blue block\npick up the red block\nstack the red block on top of the yellow block\nunstack the yellow block from on top of the blue block\nstack the yellow block on top of the red block\n[PLAN END]\n\nVerify whether the above plan is valid. If it is valid, please say \"Plan is valid.\" and nothing else. If it is invalid, please say \"Plan is invalid.\" and then provide feedback on why the plan fails."
+                },
+                {
+                    "role": "assistant",
+                    "content": "Plan is valid."
+                }
+            ]
+        }
+    ]
+}

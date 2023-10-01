@@ -97,7 +97,16 @@ class BackPrompter():
         
         
         self.read_config(config_file)
-        task_name = "task_1_plan_generation_backprompting"
+        if use_llm_feedback['use_llm']:
+            if use_llm_feedback['zero_shot']:
+                task_name = "task_1_plan_generation_backprompting_llm_feedback_zero_shot"
+                if use_llm_feedback['val_form']:
+                    task_name = "task_1_plan_generation_backprompting_llm_feedback_zero_shot_val_form"
+            else:
+                task_name = "task_1_plan_generation_backprompting_llm_feedback"
+        else:
+            task_name = "task_1_plan_generation_backprompting"
+
         instance_dir = self.data['instance_dir']
         domain_pddl = f'./instances/{self.data["domain_file"]}'
         instance_folder = f'./instances/{instance_dir}/'
@@ -238,7 +247,7 @@ class BackPrompter():
             print(f"Error: {e}")
             return False
         
-    def get_llm_feedback(self, domain_pddl, llm_plan, instance_id, messages=[]):
+    def get_llm_feedback(self, domain_pddl, llm_plan, cur_instance, use_llm_feedback, messages=[]):
         '''
         Has an LLM correct the plan. Previous messages with the LLM (generation messages)
         can optionally be passed as context to the LLM if there's interest
@@ -250,18 +259,25 @@ class BackPrompter():
         instance_folder = f'./instances/{instance_dir}/'
         n_files = min(self.data['n_instances'], len(os.listdir(instance_folder)))
         instance_structured_output = {}
-        cur_instance = instance_format.format(instance_id)
+        instance_id = int(cur_instance.split('/')[-1].split('.')[0].split('-')[-1])
         instance_structured_output["instance_id"] = instance_id
-        example_instances = random.choices([ln for ln in range(1, n_files) if ln != instance_id], k=3)        
-        example_type = [-1, 0, 1]
-        random.shuffle(example_type)
-        for example, example_type in zip(example_instances, example_type):
-            example_instance = instance_format.format(example)
-            plan_executor = self.get_executor(example_instance, domain_pddl)
-            text,_ = plan_verification(plan_executor, self.data, True, give_response = True, example_type=example_type)
-            query += text
-        plan_executor = self.get_executor(cur_instance, domain_pddl)
-        text, _ = plan_verification(plan_executor, self.data, False, llm_plan=llm_plan)
+        if not use_llm_feedback['zero_shot']:
+            example_instances = random.choices([ln for ln in range(1, n_files) if ln != instance_id], k=3)        
+            example_type = [-1, 0, 1]
+            random.shuffle(example_type)
+            for example, example_type in zip(example_instances, example_type):
+                example_instance = instance_format.format(example)
+                plan_executor = self.get_executor(example_instance, domain_pddl)
+                text,_ = plan_verification(plan_executor, self.data, True, give_response = True, example_type=example_type)
+                query += text
+            plan_executor = self.get_executor(cur_instance, domain_pddl)
+            text, _ = plan_verification(plan_executor, self.data, False, llm_plan=llm_plan)
+        else:
+            plan_executor = self.get_executor(cur_instance, domain_pddl)
+            if not use_llm_feedback['val_form']:
+                text = plan_verification_zero_shot(plan_executor, self.data, llm_plan=llm_plan)
+            else:
+                text = plan_verification_zero_shot_val_form(plan_executor, self.data, llm_plan=llm_plan)
         query += text
 
         response, messages, _, _ = send_query_with_feedback(query, engine, messages, system_message="You are the planner assistant that validates whether a provided plan is correct and provides feedback if not.")
@@ -298,16 +314,16 @@ class BackPrompter():
 
             feedback_messages = []
 
-            if use_llm_feedback:
+            if use_llm_feedback['use_llm']:
                 try:
                     llm_plan, readable_plan = text_to_plan(llm_response, problem.actions, self.gpt3_plan_file, self.data, ground_flag=True)
                 except:
                     could_not_extract = True 
                     break
-                query, feedback_messages = self.get_llm_feedback(domain_pddl, llm_plan.strip().split("\n"), cur_instance)
+                query, feedback_messages = self.get_llm_feedback(domain_pddl, llm_plan.strip().split("\n"), cur_instance, use_llm_feedback)
                 verifier_states_correct = False
                 for line in query.split('\n'):
-                    if 'plan is valid' in line:
+                    if 'plan is valid' in line.lower():
                         correct = True
                         break
             else:
@@ -324,7 +340,7 @@ class BackPrompter():
         # Determine whether backprompting result is actually correct
         # Since the LLM is not sound, this may not be true when the LLM says it is correct
         # This is always true when VAL says it is correct
-        if use_llm_feedback:
+        if use_llm_feedback['use_llm']:
             try: 
                 _, readable_plan = text_to_plan(llm_response, problem.actions, self.gpt3_plan_file, self.data)
                 feedback_dict = get_val_feedback(domain_pddl, cur_instance, self.gpt3_plan_file)
@@ -356,6 +372,7 @@ if __name__ == '__main__':
     parser.add_argument('--ignore_existing', action='store_true', help='Ignore existing output')
     parser.add_argument('--seed', type=int, default=42, help='Random seed')
     parser.add_argument('--llm_validation', action='store_true', help='Use LLM to validate itself instead of VAL')
+    
     args = parser.parse_args()
     config = args.config
     engine = args.engine
@@ -366,8 +383,13 @@ if __name__ == '__main__':
     seed = args.seed
     random.seed(seed)
     # print(task, config, verbose, specified_instances, random_example)
+    use_llm_feedback = {
+        'use_llm': args.llm_validation,
+        'zero_shot': True,
+        'val_form': True
+    }
     config_file = f'./configs/{config}.yaml'
     backprompter = BackPrompter(engine, verbose=verbose, ignore_existing=ignore_existing)
-    backprompter.task_1_plan_generation_backprompting(config_file, args.llm_validation, specified_instances=specified_instances, random_example=random_example)
+    backprompter.task_1_plan_generation_backprompting(config_file, use_llm_feedback, specified_instances=specified_instances, random_example=random_example)
 
 

@@ -497,16 +497,16 @@ def get_custom_validator_error_message(unmet_precon, unmet_goal, data, all_error
         if len(predicates) > 0 and not has_found_unmet_action:
             error_message += "There are unsatisfied preconditions.\n"
             has_found_unmet_action = True
-
-        error_message += f" The following action at step {timestep+1} has unmet preconditions:\n" \
-            if len(predicates) > 1 else \
-            f"The following action at step {timestep+1} has an unmet precondition:\n"
-        error_message += get_action_text(action.strip("()").replace(" ", "_"), data) + "\n"
-        error_message += "The unmet preconditions are:\n" \
-            if len(predicates) > 1 else \
-            "The unmet precondition is:\n"
-        
-        error_message += get_state_translation(map(lambda pddl: pddl.strip("()").replace(" ", "_"), predicates), data)
+        if len(predicates) > 0:
+            error_message += f" The following action at step {timestep+1} has unmet preconditions:\n" \
+                if len(predicates) > 1 else \
+                f"The following action at step {timestep+1} has an unmet precondition:\n"
+            error_message += get_action_text(action.strip("()").replace(" ", "_"), data) + "\n"
+            error_message += "The unmet preconditions are:\n" \
+                if len(predicates) > 1 else \
+                "The unmet precondition is:\n"
+            
+            error_message += get_state_translation(map(lambda pddl: pddl.strip("()").replace(" ", "_"), predicates), data)
 
         if not all_errors and has_found_unmet_action:
             break

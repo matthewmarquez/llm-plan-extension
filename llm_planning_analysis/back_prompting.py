@@ -283,7 +283,86 @@ class BackPrompter():
         response, messages, _, _ = send_query_with_feedback(query, engine, messages, system_message="You are the planner assistant that validates whether a provided plan is correct and provides feedback if not.")
 
         return response, messages
+
+
+    #TODO: self-critique
+    def self_critique(self, engine, original_query, domain_pddl, problem, cur_instance, use_llm_feedback, threshold_feedback_amount=15):
+        correct = 0
+        steps = 0
+        query = original_query
+        # print(original_query)
+        messages = []
+        could_not_extract = False
+        current_flag = 0
+        print(f"Sending query to LLM: Instance {cur_instance}")
+        while correct==0 and steps < threshold_feedback_amount:      
+
+            pass
+
+
+            llm_response, messages, context_window_hit, rate_limit_hit = send_query_with_feedback(query, engine, messages)
+#             llm_response = """
+# unstack the red block from on top of the blue block
+# put down the red block
+# unstack the blue block from on top of the yellow block
+# put down the blue block
+# unstack the yellow block from on top of the orange block
+# pick up the red block
+# stack the red block on top of the yellow block
+# [PLAN END]
+#             """
+#             context_window_hit, rate_limit_hit = False, False
+            if context_window_hit:
+                break
+            if rate_limit_hit:
+                print("Rate limit hit. Waiting for 60 seconds.")
+                time.sleep(60)
+                continue
+
+            feedback_messages = []
+
+            if use_llm_feedback['use_llm']:
+                try:
+                    llm_plan, readable_plan = text_to_plan(llm_response, problem.actions, self.gpt3_plan_file, self.data, ground_flag=True)
+                except:
+                    could_not_extract = True 
+                    break
+                query, feedback_messages = self.get_llm_feedback(domain_pddl, llm_plan.strip().split("\n"), cur_instance, use_llm_feedback)
+                verifier_states_correct = False
+                for line in query.split('\n'):
+                    if 'plan is valid' in line.lower():
+                        correct = True
+                        break
+            else:
+                try: 
+                    _, readable_plan = text_to_plan(llm_response, problem.actions, self.gpt3_plan_file, self.data)
+                    feedback_dict = get_val_feedback(domain_pddl, cur_instance, self.gpt3_plan_file)
+                except:
+                    could_not_extract = True 
+                    break
+                verifier_states_correct = int(feedback_dict["validation_info"]["is_valid_plan"])
+                query = get_validation_message(feedback_dict, self.data)
+            steps += 1
+
+        # Determine whether backprompting result is actually correct
+        # Since the LLM is not sound, this may not be true when the LLM says it is correct
+        # This is always true when VAL says it is correct
+        if use_llm_feedback['use_llm']:
+            try: 
+                _, readable_plan = text_to_plan(llm_response, problem.actions, self.gpt3_plan_file, self.data)
+                feedback_dict = get_val_feedback(domain_pddl, cur_instance, self.gpt3_plan_file)
+            except:
+                print("WARNING: final plan could not be verified")
+            act_correct = int(feedback_dict["validation_info"]["is_valid_plan"])
+        else:
+            act_correct = verifier_states_correct
+
+        # print(f"Final LLM response after {steps} steps")
+        return messages, readable_plan, verifier_states_correct, act_correct, steps, context_window_hit, could_not_extract, feedback_messages
     
+
+
+
     def get_repeated_verification(self, engine, original_query, domain_pddl, problem, cur_instance, use_llm_feedback, threshold_feedback_amount=15):
         correct = 0
         steps = 0

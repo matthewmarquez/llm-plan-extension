@@ -4,7 +4,7 @@ domain_file: blocksworld/mystery/generated_domain.pddl
 domain_name: mystery_blocksworld
 n_instances: 501
 start: 1
-end: 500
+end: 100
 instances_template: instance-{}.pddl
 
 domain_intro: |

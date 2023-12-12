@@ -51,7 +51,7 @@ def get_problem(instance, domain):
         return reader.parse_instance(instance)
 
 def main():
-    file_name = 'json/task_1_plan_generation_backprompting_llm_feedback_zero_shot.json'
+    file_name = 'results/mystery_blocksworld/gpt-4_chat/json/task_1_plan_generation_backprompting_llm_feedback_zero_shot.json'
 
     with open(file_name, 'r') as f:
         data = json.load(f)
@@ -99,3 +99,5 @@ def main():
             #Percentage of False Negatives in inter_dict
             pass
 
+if __name__ == '__main__':
+    main()

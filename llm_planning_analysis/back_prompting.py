@@ -465,7 +465,7 @@ if __name__ == '__main__':
     use_llm_feedback = {
         'use_llm': args.llm_validation,
         'zero_shot': True,
-        'val_form': True
+        'val_form': False
     }
     config_file = f'./configs/{config}.yaml'
     backprompter = BackPrompter(engine, verbose=verbose, ignore_existing=ignore_existing)
